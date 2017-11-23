@@ -1,39 +1,69 @@
-// Sample skecth for iotab - Blink LED2
 const unsigned long baudrate = 115200;
-//const unsigned long baudrate = 9600;
-
-#include "iotab.h"
-
-#define DEBUG (1)
-String gps;
-void setup() {
-  if DEBUG SerialUSB.begin(baudrate);
-  Serial.begin(baudrate);
- 
-  //3GIMの電源を入れ直す
-  iotab.begin();
-
-  iotab.gpsBegin();
-
-  //gps init
-  iotab.gpsBegin();
-  iotab.debug_write("\n----------- gps init -------------");
-
-
-  //LEDを５回点滅させる
-  for (int i = 0; i < 5; i++) {
-    iotab.LedSetGIM(true); delay(10);
-    iotab.LedSetGIM(false); delay(10);
-  }
-  
-  iotab.debug_write("\n----------- ready -------------");
-
-}
+#include "iotab.h"`
 
 #define INTERVAL  (50)
 
+#define LIMITTIME 60000 // ms (3G module start time
+#define TGPS  10000
+#define TMGPS 60000
+#define DEBUG (1)
+
+String URL    = "http://sugasaki.com/3gim/makefile.php?file=";
+//String URL = "http://tachibanawangan.com/wan-navi-receiver/api/RunnerSave/";
+
+String fname;
+String dtime;
+String gps;
+String imei;
+
+//2015-12-03T14:42:29$+09:00 | 35.64641833 139.6129596
+// ---------------- setup ----------------
+void setup() {
+  delay(3000);
+  if DEBUG SerialUSB.begin(baudrate);
+  Serial.begin(baudrate);
+
+
+  if DEBUG   SerialUSB.println("start 3GIM setup()");
+  if DEBUG   SerialUSB.println("電源切る");
+  pinMode(9, OUTPUT);
+/*
+  digitalWrite(9, HIGH); delay(100);//待機重要
+  digitalWrite(9, LOW); delay(5); // 3G shield --> digitalWrite(7,HIGH);
+*/
+
+  digitalWrite(io3gimPowerOnPin, HIGH); delay(100);  // Turn on
+  if DEBUG   SerialUSB.println("電源切った");
+  //if DEBUG   SerialUSB.println("電源入れる");
+  digitalWrite(io3gimPowerOnPin, LOW); delay(5);  // Turn on
+
+  if DEBUG   SerialUSB.println("電源入れた");
+
+
+if DEBUG   SerialUSB.println("on off");
+
+  /*
+  String str;
+  do {
+    while (!Serial.available());
+    str = Serial.readStringUntil('\n');
+if DEBUG     SerialUSB.println(str);
+  } while (str.indexOf("3GIM") < 0);
+if DEBUG   SerialUSB.println("Connected");
+*/
+
+//  imei = com3gim("$YI");
+//  imei = imei.substring(7);
+//  if DEBUG   SerialUSB.println("imei =" + imei);
+
+
+if DEBUG   SerialUSB.println("\n----------- ready -------------");
+}
+
+
+
 void loop() {
-    Serial.setTimeout(10000); // タイムアウト設定
+//    Serial.setTimeout(10000); // タイムアウト設定
 
     static unsigned long tim = millis(); //現在の通算秒をtimにセット
 

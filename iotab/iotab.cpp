@@ -21,18 +21,32 @@ IOTAB iotab;
 // begin() -- 
 int IOTAB::begin(void) {
   if (hasInitialized) return ioError;   // already had initialized
-  
+  iotab.debug_write("1`..");
+
+
   // Set up GPIOs
   pinMode(io3gimPowerOnPin, OUTPUT); //9番ピン
-  turnOnOff3GIM(false); //電源切る
-  turnOnOff3GIM(true); //電源入れる
+  iotab.debug_write("2..");
 
+  digitalWrite(9, HIGH); delay(100);//待機重要
+  iotab.debug_write("3..");
+  digitalWrite(9, LOW); delay(5); // 3G shield --> digitalWrite(7,HIGH);
+  iotab.debug_write("4..");
+  
+/*
+  iotab.turnOnOff3GIM(false); //電源切る
+  iotab.debug_write("3..");
+  
+  iotab.turnOnOff3GIM(true); //電源入れる
+  iotab.debug_write("4..");
+   */
+   
   //LEDのつけ忘れ解除のためにLED消す
   LedSetIoTab(false); //IoTab側
   LedSetGIM(false); //3GIM側
-
+  iotab.debug_write("3..");
   //
-  pinMode(ioTactSwitchPin, INPUT_PULLUP);
+ // pinMode(ioTactSwitchPin, INPUT_PULLUP);
  
   //3GIMが起動するまで待つ
   iotab.waitWakeUp3Gim();
@@ -43,18 +57,61 @@ int IOTAB::begin(void) {
 }
 
 
+
+
+//
+// 3GIMの電源をON／OFF する。
+// true : 電源をON
+// false: 電源をOFF
+void IOTAB::turnOnOff3GIM(bool on) {
+  if DEBUG Serial.println("on=..");
+//  iotab.debug_write("on=.." );
+//  digitalWrite(io3gimPowerOnPin, on ? LOW : HIGH);  // Turn on
+  if (on){
+    //3GIMの電源ON
+    digitalWrite(io3gimPowerOnPin, LOW);  // Turn on
+  }else{
+    //3GIMの電源OFF
+    digitalWrite(io3gimPowerOnPin, HIGH);  // Turn on
+    if DEBUG Serial.println("3GIMの電源OFF...");
+  }
+
+  //iotab.debug_write("digitalWrite end..." );
+  if DEBUG Serial.println("digitalWrite end...");
+
+  //wait 
+  if (on){
+    if DEBUG Serial.println("delay 5ms...");
+    delay(5) ;
+  }else{
+    if DEBUG Serial.println("delay 1000ms...");
+    delay(100);//OFF時には100ms待機する。    
+  }
+//  iotab.debug_write("turnOnOff3GIM end..." );
+  if DEBUG Serial.println("turnOnOff3GIM end...");
+  
+}
+
+
+
+
+
+
 //
 String IOTAB::gpsBegin(){
-  
+   iotab.debug_write("1..");
+
   Serial.println("$YA 1"); //ATコマンドパススルーモード切換え
   delay(20);
   //Serial.println("at+wppp=2,4,\"\",\"\"");
   Serial.println("at+wppp=2,4,\"sora\",\"sora\"");
-    
+    iotab.debug_write("1..");
+       
   delay(10);
   Serial.println("at+gpsnmea=1,,1");
   delay(10);
-
+   iotab.debug_write("1..");
+   
   //>>が返ってくるまで待機
   String str;
   do {
@@ -68,6 +125,7 @@ String IOTAB::gpsBegin(){
 
 //３GIMが起動するまで待機する
 String IOTAB::waitWakeUp3Gim() {
+  iotab.debug_write("start waitWakeUp3Gim...");
 
   String str;
   do {
@@ -93,16 +151,6 @@ void IOTAB::LedSetIoTab(bool on) {
 }
 
 
-// 3GIMの電源をON／OFF する。
-// true : 電源をON
-// false: 電源をOFF
-void IOTAB::turnOnOff3GIM(bool on) {
-  int sw = on ? LOW : HIGH; //on時はLowをセットする、電源を切る際にはHIGH
-  digitalWrite(io3gimPowerOnPin, sw);  // Turn on
-  on == false ? delay(100) : delay(5) ;//OFF時には100ms待機する。
-}
-
-
 int IOTAB::getVIN(void) {
 #define NCOUNTS   5
   int mV = 0;
@@ -119,8 +167,8 @@ int IOTAB::getVIN(void) {
 String gpsDateTime() {
   String dtime1 = datetime();
   String dtime2 = dtime1.substring(11);
-if DEBUG SerialUSB.println("dtime1 = " + dtime1);
-if DEBUG SerialUSB.println("dtime2 = " + dtime2);
+if DEBUG Serial.println("dtime1 = " + dtime1);
+if DEBUG Serial.println("dtime2 = " + dtime2);
 
   return dtime1;
 }
@@ -129,16 +177,16 @@ if DEBUG SerialUSB.println("dtime2 = " + dtime2);
 //============== get Date Time  =================
 String IOTAB::GetDateTimeBy3G() {
   String dtim;
-  if DEBUG SerialUSB.println("start--- datetime");
+  if DEBUG Serial.println("start--- datetime");
   uint32_t tm = millis();
   
   do {
     while (!Serial1);
     Serial.println("$YT"); delay(10);
-    if DEBUG SerialUSB.println("$YT");
+    if DEBUG Serial.println("$YT");
     while (!Serial.available());
     dtim = Serial.readStringUntil('\n');
-    if DEBUG SerialUSB.println(dtim);
+    if DEBUG Serial.println(dtim);
     delay(100);
   } while ( !(dtim.indexOf("201") == 7) );
   
@@ -312,7 +360,7 @@ String IOTAB::sendCommand_led(String com) {
 
 
 void IOTAB::debug_write(String value){
-  if DEBUG SerialUSB.println(value);
+//  if DEBUG .println(value);
 }
 
 
